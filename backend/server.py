@@ -12,6 +12,10 @@ from datetime import datetime
 
 # AI agents
 from ai_agents.agents import AgentConfig, SearchAgent, ChatAgent
+import feedparser
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 
 ROOT_DIR = Path(__file__).parent
@@ -72,6 +76,136 @@ class SearchResponse(BaseModel):
     search_results: Optional[dict] = None
     sources_count: int
     error: Optional[str] = None
+
+
+# News models
+class NewsArticle(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: str
+    url: str
+    published: Optional[datetime] = None
+    source: str
+    image_url: Optional[str] = None
+    category: Optional[str] = None
+
+
+class NewsRequest(BaseModel):
+    category: str = "general"  # general, world, nation, business, technology, entertainment, sports, science, health
+    country: str = "US"  # US, UK, AU, etc.
+    limit: int = 20
+
+
+class NewsResponse(BaseModel):
+    success: bool
+    articles: List[NewsArticle]
+    total_count: int
+    category: str
+    country: str
+    error: Optional[str] = None
+
+
+# News scraping functions
+def get_google_news_rss_url(category: str = "general", country: str = "US") -> str:
+    """Generate Google News RSS URL based on category and country"""
+    base_url = "https://news.google.com/rss"
+
+    # Country codes mapping
+    country_codes = {
+        "US": "US",
+        "UK": "GB",
+        "AU": "AU",
+        "CA": "CA",
+        "IN": "IN"
+    }
+
+    # Category mapping
+    category_mapping = {
+        "general": "",
+        "world": "/headlines/section/topic/WORLD",
+        "nation": "/headlines/section/topic/NATION",
+        "business": "/headlines/section/topic/BUSINESS",
+        "technology": "/headlines/section/topic/TECHNOLOGY",
+        "entertainment": "/headlines/section/topic/ENTERTAINMENT",
+        "sports": "/headlines/section/topic/SPORTS",
+        "science": "/headlines/section/topic/SCIENCE",
+        "health": "/headlines/section/topic/HEALTH"
+    }
+
+    country_code = country_codes.get(country, "US")
+    category_path = category_mapping.get(category, "")
+
+    if category_path:
+        return f"{base_url}{category_path}?hl=en-{country_code}&gl={country_code}&ceid={country_code}:en"
+    else:
+        return f"{base_url}?hl=en-{country_code}&gl={country_code}&ceid={country_code}:en"
+
+
+def extract_image_from_content(content: str) -> Optional[str]:
+    """Extract image URL from RSS content"""
+    try:
+        soup = BeautifulSoup(content, 'html.parser')
+        img_tag = soup.find('img')
+        if img_tag and img_tag.get('src'):
+            return img_tag.get('src')
+    except:
+        pass
+    return None
+
+
+async def scrape_google_news(category: str = "general", country: str = "US", limit: int = 20) -> List[NewsArticle]:
+    """Scrape news from Google News RSS feed"""
+    try:
+        rss_url = get_google_news_rss_url(category, country)
+
+        # Fetch RSS feed
+        response = requests.get(rss_url, timeout=10)
+        response.raise_for_status()
+
+        # Parse RSS feed
+        feed = feedparser.parse(response.content)
+
+        articles = []
+        for entry in feed.entries[:limit]:
+            # Parse published date
+            published_date = None
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                try:
+                    published_date = datetime(*entry.published_parsed[:6])
+                except:
+                    pass
+
+            # Extract image from content
+            image_url = None
+            if hasattr(entry, 'summary'):
+                image_url = extract_image_from_content(entry.summary)
+
+            # Extract source from title (Google News format: "Title - Source")
+            title = entry.title
+            source = "Google News"
+            if " - " in title:
+                parts = title.rsplit(" - ", 1)
+                if len(parts) == 2:
+                    title = parts[0]
+                    source = parts[1]
+
+            article = NewsArticle(
+                title=title,
+                description=entry.get('summary', '')[:500],  # Truncate description
+                url=entry.link,
+                published=published_date,
+                source=source,
+                image_url=image_url,
+                category=category
+            )
+            articles.append(article)
+
+        return articles
+
+    except Exception as e:
+        logger.error(f"Error scraping Google News: {e}")
+        return []
+
 
 # Routes
 @api_router.get("/")
@@ -174,6 +308,63 @@ async def search_and_summarize(request: SearchRequest):
             sources_count=0,
             error=str(e)
         )
+
+
+# News routes
+@api_router.post("/news", response_model=NewsResponse)
+async def get_news(request: NewsRequest):
+    """Get news articles from Google News RSS feed"""
+    try:
+        articles = await scrape_google_news(
+            category=request.category,
+            country=request.country,
+            limit=request.limit
+        )
+
+        return NewsResponse(
+            success=True,
+            articles=articles,
+            total_count=len(articles),
+            category=request.category,
+            country=request.country
+        )
+
+    except Exception as e:
+        logger.error(f"Error in news endpoint: {e}")
+        return NewsResponse(
+            success=False,
+            articles=[],
+            total_count=0,
+            category=request.category,
+            country=request.country,
+            error=str(e)
+        )
+
+
+@api_router.get("/news/categories")
+async def get_news_categories():
+    """Get available news categories"""
+    return {
+        "success": True,
+        "categories": [
+            {"id": "general", "name": "General"},
+            {"id": "world", "name": "World"},
+            {"id": "nation", "name": "National"},
+            {"id": "business", "name": "Business"},
+            {"id": "technology", "name": "Technology"},
+            {"id": "entertainment", "name": "Entertainment"},
+            {"id": "sports", "name": "Sports"},
+            {"id": "science", "name": "Science"},
+            {"id": "health", "name": "Health"}
+        ],
+        "countries": [
+            {"id": "US", "name": "United States"},
+            {"id": "UK", "name": "United Kingdom"},
+            {"id": "AU", "name": "Australia"},
+            {"id": "CA", "name": "Canada"},
+            {"id": "IN", "name": "India"}
+        ]
+    }
 
 
 @api_router.get("/agents/capabilities")
