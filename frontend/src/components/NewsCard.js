@@ -48,9 +48,9 @@ const NewsCard = ({ article }) => {
   };
 
   return (
-    <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600 overflow-hidden">
+    <Card className="group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-slate-200 hover:border-slate-300 dark:border-slate-700 dark:hover:border-slate-600 overflow-hidden touch-manipulation">
       {/* Image Section */}
-      <div className="relative h-48 bg-slate-100 overflow-hidden">
+      <div className="relative h-40 sm:h-48 bg-slate-100 overflow-hidden">
         {!imageError && article.image_url ? (
           <img
             src={article.image_url}
@@ -74,41 +74,41 @@ const NewsCard = ({ article }) => {
         {/* Loading skeleton for image */}
         {imageLoading && !imageError && (
           <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
-            <ImageIcon className="h-8 w-8 text-slate-400" />
+            <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400" />
           </div>
         )}
 
         {/* Category badge overlay */}
         {article.category && (
-          <Badge variant="secondary" className="absolute top-3 left-3 text-xs bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm">
+          <Badge variant="secondary" className="absolute top-2 left-2 sm:top-3 sm:left-3 text-xs bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm">
             {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
           </Badge>
         )}
       </div>
 
-      <CardHeader onClick={handleCardClick} className="space-y-3 pb-2">
+      <CardHeader onClick={handleCardClick} className="space-y-2 sm:space-y-3 pb-2 p-3 sm:p-6">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg font-bold leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
+          <CardTitle className="text-base sm:text-lg font-bold leading-tight group-hover:text-blue-600 transition-colors line-clamp-2">
             {article.title}
           </CardTitle>
-          <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-colors flex-shrink-0 mt-1" />
+          <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-blue-600 transition-colors flex-shrink-0 mt-0.5 sm:mt-1" />
         </div>
 
-        <div className="flex items-center gap-4 text-sm text-slate-600">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 text-xs sm:text-sm text-slate-600 dark:text-slate-400">
           <div className="flex items-center gap-1">
-            <Globe className="h-3 w-3" />
-            <span className="font-medium">{article.source}</span>
+            <Globe className="h-3 w-3 flex-shrink-0" />
+            <span className="font-medium truncate">{article.source}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            <span>{formatDate(article.published)}</span>
+            <Calendar className="h-3 w-3 flex-shrink-0" />
+            <span className="text-nowrap">{formatDate(article.published)}</span>
           </div>
         </div>
       </CardHeader>
 
       {article.description && (
-        <CardContent onClick={handleCardClick} className="pt-0 pb-4">
-          <CardDescription className="text-sm leading-relaxed line-clamp-3">
+        <CardContent onClick={handleCardClick} className="pt-0 pb-3 sm:pb-4 px-3 sm:px-6">
+          <CardDescription className="text-sm leading-relaxed line-clamp-3 text-slate-600 dark:text-slate-300">
             {article.description.replace(/<[^>]*>/g, '')} {/* Remove HTML tags */}
           </CardDescription>
         </CardContent>

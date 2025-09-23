@@ -113,19 +113,21 @@ const NewsPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
-      <div className="bg-white dark:bg-slate-900 shadow-sm border-b dark:border-slate-700">
+      <div className="bg-white dark:bg-slate-900 shadow-sm border-b dark:border-slate-700 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Newspaper className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <div className="py-3 sm:py-4 md:py-6">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <Newspaper className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white truncate">
                   News Hub
                 </h1>
               </div>
-              <ThemeToggle />
+              <div className="flex-shrink-0">
+                <ThemeToggle />
+              </div>
             </div>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">
+            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">
               Stay updated with the latest news from around the world
             </p>
           </div>
@@ -149,9 +151,9 @@ const NewsPage = () => {
       )}
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+          <Alert className="mb-4 sm:mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
             <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
             <AlertDescription className="text-red-800 dark:text-red-200">
               {error}
@@ -160,7 +162,7 @@ const NewsPage = () => {
         )}
 
         {/* Articles Grid */}
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {isLoading
             ? Array.from({ length: 12 }, (_, i) => (
                 <SkeletonCard key={i} />
@@ -173,12 +175,12 @@ const NewsPage = () => {
 
         {/* No articles message */}
         {!isLoading && filteredArticles.length === 0 && !error && (
-          <div className="text-center py-12">
-            <Newspaper className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          <div className="text-center py-8 sm:py-12 px-4">
+            <Newspaper className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3 sm:mb-4" />
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-2">
               {articles.length === 0 ? 'No articles found' : 'No articles match your search'}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-md mx-auto leading-relaxed">
               {articles.length === 0
                 ? 'Try selecting a different category or country, or refresh to load new articles.'
                 : 'Try adjusting your search query or clearing the search to see all articles.'
@@ -189,11 +191,11 @@ const NewsPage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 mt-8 sm:mt-12 md:mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           <div className="text-center text-gray-600 dark:text-gray-300">
-            <p>News articles sourced from Google News RSS feeds</p>
-            <p className="text-sm mt-2">
+            <p className="text-sm sm:text-base">News articles sourced from Google News RSS feeds</p>
+            <p className="text-xs sm:text-sm mt-1 sm:mt-2">
               {filteredArticles.length > 0 && `Showing ${filteredArticles.length} of ${articles.length} articles`}
             </p>
           </div>
